@@ -26,6 +26,15 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
     *   Supported Profile Types: `cpu`, `heap`, `allocs`, `goroutine`, `mutex`, `block`.
     *   Requires the user to specify the output SVG file path.
     *   **Important:** This feature depends on [Graphviz](#dependencies) being installed.
+*   **`open_interactive_pprof` Tool (macOS Only):**
+    *   Attempts to launch the `go tool pprof` interactive web UI in the background for the specified pprof file. Uses port `:8081` by default if `http_address` is not provided.
+    *   Returns the Process ID (PID) of the background `pprof` process upon successful launch.
+    *   **macOS Only:** This tool will only work on macOS.
+    *   **Dependencies:** Requires the `go` command to be available in the system's PATH.
+    *   **Limitations:** Errors from the background `pprof` process are not captured by the server. Temporary files downloaded from remote URLs are not automatically cleaned up until the process is terminated (either manually via `disconnect_pprof_session` or when the MCP server exits).
+*   **`disconnect_pprof_session` Tool:**
+    *   Attempts to terminate a background `pprof` process previously started by `open_interactive_pprof`, using its PID.
+    *   Sends an Interrupt signal first, then a Kill signal if Interrupt fails.
 
 ## Installation (As a Library/Tool)
 
@@ -299,6 +308,29 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
     "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.heap",
     "profile_type": "heap",
     "output_svg_path": "./online_heap_flamegraph.svg"
+  }
+}
+```
+
+**Example: Open Interactive Pprof UI for Online CPU Profile (macOS Only)**
+
+```json
+{
+  "tool_name": "open_interactive_pprof",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.cpu"
+    // Optional: "http_address": ":8082" // Example of overriding the default port
+  }
+}
+```
+
+**Example: Disconnect a Pprof Session**
+
+```json
+{
+  "tool_name": "disconnect_pprof_session",
+  "arguments": {
+    "pid": 12345 // Replace 12345 with the actual PID returned by open_interactive_pprof
   }
 }
 ```

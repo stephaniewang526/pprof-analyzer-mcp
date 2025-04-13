@@ -62,11 +62,42 @@ func main() {
 		),
 	)
 
-	// 4. 将工具及其处理器函数添加到服务器
-	mcpServer.AddTool(analyzeTool, handleAnalyzePprof)
-	mcpServer.AddTool(flamegraphTool, handleGenerateFlamegraph) // 添加新工具和处理器
+	// 4. 定义 open_interactive_pprof 工具 (仅限 macOS)
+	openInteractiveTool := mcp.NewTool("open_interactive_pprof",
+		mcp.WithDescription("【仅限 macOS】尝试在后台启动 'go tool pprof' 交互式 Web UI。成功启动后会返回进程 PID，用于后续手动断开连接。"),
+		mcp.WithString("profile_uri",
+			mcp.Description("要分析的 pprof 文件的 URI (支持 'file://', 'http://', 'https://' 或本地路径)。"),
+			mcp.Required(),
+		),
+		mcp.WithString("http_address",
+			mcp.Description("指定 pprof Web UI 的监听地址和端口 (例如 ':8081')。如果省略，默认为 ':8081'。"),
+			// mcp.Optional(), // 不提供 Required() 即为可选
+		),
+	)
 
-	// 5. Start the server using stdio transport
+	// 5. 定义 disconnect_pprof_session 工具
+	disconnectTool := mcp.NewTool("disconnect_pprof_session",
+		mcp.WithDescription("尝试终止由 'open_interactive_pprof' 启动的指定后台 pprof 进程。"),
+		mcp.WithNumber("pid", // 使用 Number 类型，因为 JSON 通常将数字表示为 float64
+			mcp.Description("要终止的后台 pprof 进程的 PID (由 'open_interactive_pprof' 返回)。"),
+			mcp.Required(),
+		),
+		mcp.WithString("http_address", // 可选参数
+			mcp.Description("指定 pprof Web UI 的监听地址和端口 (例如 ':8081')。如果省略，pprof 会自动选择。"),
+			// mcp.Optional(), // mcp-go SDK 可能没有显式的 Optional()，不提供 Required() 即为可选
+		),
+	)
+
+	// 6. 将所有工具及其处理器函数添加到服务器
+	mcpServer.AddTool(analyzeTool, handleAnalyzePprof)
+	mcpServer.AddTool(flamegraphTool, handleGenerateFlamegraph)
+	mcpServer.AddTool(openInteractiveTool, handleOpenInteractivePprof)
+	mcpServer.AddTool(disconnectTool, handleDisconnectPprofSession) // 注册断开连接工具
+
+	// 7. 设置信号处理程序以进行清理
+	setupSignalHandler() // 在服务器启动前设置
+
+	// 8. Start the server using stdio transport
 	log.Println("Starting PprofAnalyzer MCP server via stdio...")
 	if err := server.ServeStdio(mcpServer); err != nil {
 		log.Fatalf("Server error: %v", err)

@@ -26,6 +26,15 @@
     *   支持的 Profile 类型：`cpu`, `heap`, `allocs`, `goroutine`, `mutex`, `block`。
     *   需要用户指定输出 SVG 文件的路径。
     *   **重要：** 此功能依赖于 [Graphviz](#依赖项) 的安装。
+*   **`open_interactive_pprof` 工具 (仅限 macOS):**
+    *   尝试在后台为指定的 pprof 文件启动 `go tool pprof` 交互式 Web UI。如果未提供 `http_address`，默认使用端口 `:8081`。
+    *   成功启动后返回后台 `pprof` 进程的进程 ID (PID)。
+    *   **仅限 macOS:** 此工具仅在 macOS 上有效。
+    *   **依赖项：** 需要 `go` 命令在系统的 PATH 中可用。
+    *   **限制：** 服务器无法捕获后台 `pprof` 进程的错误。从远程 URL 下载的临时文件在进程终止前（通过 `disconnect_pprof_session` 手动终止或 MCP 服务器退出时）不会被自动清理。
+*   **`disconnect_pprof_session` 工具:**
+    *   尝试使用 PID 终止先前由 `open_interactive_pprof` 启动的后台 `pprof` 进程。
+    *   首先发送 Interrupt 信号，如果失败则发送 Kill 信号。
 
 ## 安装 (作为库/工具)
 
@@ -299,6 +308,29 @@ go install .
     "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.heap",
     "profile_type": "heap",
     "output_svg_path": "./online_heap_flamegraph.svg"
+  }
+}
+```
+
+**示例：为在线 CPU Profile 打开交互式 Pprof UI (仅限 macOS)**
+
+```json
+{
+  "tool_name": "open_interactive_pprof",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.cpu"
+    // 可选："http_address": ":8082" // 覆盖默认端口的示例
+  }
+}
+```
+
+**示例：断开 Pprof 会话连接**
+
+```json
+{
+  "tool_name": "disconnect_pprof_session",
+  "arguments": {
+    "pid": 12345 // 将 12345 替换为 open_interactive_pprof 返回的实际 PID
   }
 }
 ```
