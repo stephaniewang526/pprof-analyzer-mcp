@@ -57,6 +57,39 @@ go install .
 # go install github.com/ZephyrDeng/pprof-analyzer-mcp@latest
 ```
 
+## 使用 Docker 运行
+
+使用 Docker 是一种便捷的运行服务器的方式，因为它打包了必需的 Graphviz 依赖。
+
+1.  **构建 Docker 镜像：**
+    在项目根目录（包含 `Dockerfile` 文件的目录）下运行：
+    ```bash
+    docker build -t pprof-analyzer-mcp .
+    ```
+
+2.  **运行 Docker 容器：**
+    ```bash
+    docker run -i --rm pprof-analyzer-mcp
+    ```
+    *   `-i` 标志保持标准输入 (STDIN) 打开，这是此 MCP 服务器使用的 stdio 传输协议所必需的。
+    *   `--rm` 标志表示容器退出时自动删除。
+
+3.  **为 Docker 配置 MCP 客户端：**
+    要将你的 MCP 客户端（如 Roo Cline）连接到在 Docker 内部运行的服务器，请更新你的 `.roo/mcp.json`：
+    ```json
+    {
+      "mcpServers": {
+        "pprof-analyzer-docker": { // 为 Docker 设置使用一个不同的名称
+          // 使用 'docker run' 作为命令
+          "command": "docker run -i --rm pprof-analyzer-mcp"
+        }
+        // ... 其他服务器配置
+      }
+    }
+    ```
+    在客户端尝试运行此命令之前，请确保 `pprof-analyzer-mcp` 镜像已在本地构建。
+
+
 ## 发布流程 (通过 GitHub Actions 自动化)
 
 本项目使用 [GoReleaser](https://goreleaser.com/) 和 GitHub Actions 来自动化发布流程。当一个匹配 `v*` 模式（例如 `v0.1.0`, `v1.2.3`）的 Git 标签被推送到仓库时，会自动触发发布。

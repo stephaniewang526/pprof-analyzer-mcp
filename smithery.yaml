@@ -1,0 +1,27 @@
+# Smithery.ai configuration for pprof-analyzer-mcp
+startCommand:
+  # Specifies that this is a standard I/O based MCP server
+  type: stdio
+
+  # JSON Schema defining configuration options for the server.
+  # Our server doesn't require any configuration, so this is empty.
+  configSchema: {}
+
+  # A JavaScript function that produces the CLI command to start the MCP server via stdio.
+  # It receives the user-provided config (which is empty in our case).
+  # It should return an object with 'command' and optionally 'args' and 'env'.
+  # The command here refers to the executable inside the Docker container built by the Dockerfile.
+  commandFunction: |-
+    (config) => ({
+      // The command is the path to the binary inside the Docker container's WORKDIR.
+      "command": "/app/pprof-analyzer-mcp",
+      // No arguments needed for our server.
+      "args": [],
+      // No specific environment variables needed for our server.
+      "env": {}
+    })
+
+# Optional build configuration (if Dockerfile is not in the root or named differently)
+# build:
+#   dockerfile: Dockerfile # Path to Dockerfile relative to this file (default)
+#   dockerBuildPath: .     # Path to docker build context relative to this file (default)
