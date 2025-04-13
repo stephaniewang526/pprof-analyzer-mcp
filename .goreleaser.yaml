@@ -1,0 +1,117 @@
+# .goreleaser.yaml
+# Visit https://goreleaser.com/customization/ for more options
+
+# Project metadata
+project_name: pprof-analyzer-mcp
+
+# Environment variables for the build
+env:
+  - CGO_ENABLED=0 # Disable CGO for easier cross-compilation
+
+# Build configuration
+builds:
+  - # Main build configuration for the CLI tool
+    id: pprof-analyzer-mcp
+    # Path to the main package
+    main: ./main.go
+    # Binary name (defaults to project_name)
+    binary: pprof-analyzer-mcp
+    # Target platforms (OS and Architecture)
+    # Common examples:
+    # - linux/amd64
+    # - linux/arm64
+    # - darwin/amd64 (macOS Intel)
+    # - darwin/arm64 (macOS Apple Silicon)
+    # - windows/amd64
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Optional: Specify Go version (if different from workflow)
+    # goversion: 1.23
+    # Optional: Build flags
+    # ldflags:
+    #   - -s -w # Strip symbols and DWARF info to reduce binary size
+    #   - -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+# Archive configuration (how to package the binaries)
+archives:
+  - # Default archive format
+    id: default
+    # Files to include in the archive besides the binary
+    # files:
+    #   - LICENSE
+    #   - README.md
+    # Format (zip or tar.gz)
+    format: tar.gz
+    # Optional: Naming template for the archive file
+    # name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Optional: Wrap binary in a directory inside the archive
+    wrap_in_directory: true
+
+# Checksum generation
+checksum:
+  name_template: 'checksums.txt'
+
+# Snapshot release configuration (for testing goreleaser without tagging)
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# Changelog generation configuration
+changelog:
+  # Sort order: asc or desc
+  sort: asc
+  # Filters for commit messages to include/exclude
+  filters:
+    # Exclude merge commits, chore, docs, test, ci, etc.
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+  # Group commits by type (e.g., feat, fix)
+  groups:
+    - title: Features
+      regexp: "^feat[(\\w)]*:"
+      order: 0
+    - title: Bug Fixes
+      regexp: "^fix[(\\w)]*:"
+      order: 1
+    - title: Others
+      order: 999 # Catches everything else
+
+# Release configuration (how to create the GitHub Release)
+release:
+  # GitHub repository details (usually auto-detected)
+  # github:
+  #   owner: ZephyrDeng
+  #   name: pprof-analyzer-mcp
+
+  # Draft release (set to false to publish immediately)
+  draft: false
+  # Prerelease (set to true if the tag is like vX.Y.Z-rc1)
+  prerelease: auto
+  # Optional: Name template for the release title
+  # name_template: "{{.ProjectName}} {{.Tag}}"
+  # Optional: Add extra files to the release assets
+  # extra_files:
+  #   - glob: ./path/to/some/file.txt
+  # Header/Footer for the release notes (can use Go templates)
+  # header: |
+  #   ## Installation
+  #   See the [README](https://github.com/ZephyrDeng/pprof-analyzer-mcp#installation) for installation instructions.
+  # footer: |
+  #   ---
+  #   Released with [GoReleaser](https://goreleaser.com)!
+
+# Optional: Announce release to other platforms (e.g., Slack, Discord)
+# announce:
+#   slack:
+#     enabled: true
+#     channel: '#releases'
+#     message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
