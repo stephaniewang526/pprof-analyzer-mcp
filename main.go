@@ -25,7 +25,7 @@ func main() {
 		// mcp.WithAnnotation("readOnlyHint", true),             // TODO: 检查如何在 mcp-go 中设置注解
 
 		mcp.WithString("profile_uri", // 参数名称
-			mcp.Description("要分析的 pprof 文件的 URI (必须是 'file://' 协议，例如 'file:///path/to/profile.pb.gz')。"),
+			mcp.Description("要分析的 pprof 文件的 URI (支持 'file://', 'http://', 'https://' 协议)。例如 'file:///path/to/profile.pb.gz' 或 'https://example.com/profile.pb.gz'。"),
 			mcp.Required(),
 		),
 		mcp.WithString("profile_type", // 参数名称
@@ -48,7 +48,7 @@ func main() {
 	flamegraphTool := mcp.NewTool("generate_flamegraph",
 		mcp.WithDescription("使用 'go tool pprof' 生成指定 pprof 文件的火焰图 (SVG 格式)。"),
 		mcp.WithString("profile_uri",
-			mcp.Description("要生成火焰图的 pprof 文件的 URI (必须是 'file://' 协议)。"),
+			mcp.Description("要生成火焰图的 pprof 文件的 URI (支持 'file://', 'http://', 'https://' 协议)。"),
 			mcp.Required(),
 		),
 		mcp.WithString("profile_type",

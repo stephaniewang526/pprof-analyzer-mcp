@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io" // 新增：用于 io.Copy 和 ReadCloser
 	"log"
+	"net/http" // 新增：用于 HTTP 请求
 	"net/url"
 	"os"
 	"os/exec"
@@ -15,6 +17,100 @@ import (
 
 	"github.com/ZephyrDeng/pprof-analyzer-mcp/analyzer" // 导入新的 analyzer 包
 )
+
+// getProfileAsFile 获取 profile 文件。
+// - 如果输入不包含 "://", 则视为本地文件路径（相对或绝对）。
+// - 如果是 file:// URI，直接使用其路径。
+// - 如果是 http:// 或 https:// URI，下载到临时文件并返回其路径。
+// 返回最终的文件路径、一个用于清理临时文件的函数（如果创建了临时文件）以及错误。
+func getProfileAsFile(uriStr string) (filePath string, cleanup func(), err error) {
+	cleanup = func() {} // 默认清理函数为空操作
+
+	// 检查输入是否包含协议头，如果没有，则假定为本地文件路径
+	if !strings.Contains(uriStr, "://") {
+		log.Printf("Input '%s' does not contain '://', treating as local file path.", uriStr)
+		absPath, err := filepath.Abs(uriStr)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to get absolute path for '%s': %w", uriStr, err)
+		}
+		log.Printf("Using absolute local path: %s", absPath)
+		// 检查文件是否存在且可读 (可选但推荐)
+		// _, statErr := os.Stat(absPath)
+		// if statErr != nil {
+		// 	 return "", nil, fmt.Errorf("local file '%s' (resolved to '%s') error: %w", uriStr, absPath, statErr)
+		// }
+		return absPath, cleanup, nil
+	}
+
+	// 如果包含 "://", 则按 URI 处理
+	parsedURI, err := url.Parse(uriStr)
+	if err != nil {
+		return "", nil, fmt.Errorf("invalid profile URI '%s': %w", uriStr, err)
+	}
+
+	// (cleanup 默认值已在函数开头设置)
+
+	switch parsedURI.Scheme {
+	case "file":
+		filePath = parsedURI.Path
+		if filePath == "" {
+			return "", nil, fmt.Errorf("invalid file path derived from URI '%s'", uriStr)
+		}
+		log.Printf("Using local profile file: %s", filePath)
+		return filePath, cleanup, nil
+
+	case "http", "https":
+		log.Printf("Attempting to download profile from URL: %s", uriStr)
+		resp, err := http.Get(uriStr)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to download profile from '%s': %w", uriStr, err)
+		}
+		defer resp.Body.Close() // 确保响应体被关闭
+
+		if resp.StatusCode != http.StatusOK {
+			return "", nil, fmt.Errorf("failed to download profile from '%s': received status code %d", uriStr, resp.StatusCode)
+		}
+
+		// 创建临时文件来存储下载的内容
+		// 使用 "pprof-*.pb.gz" 作为模式，方便识别，后缀不影响内容
+		tempFile, err := os.CreateTemp("", "pprof-*.pb.gz")
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to create temporary file for download: %w", err)
+		}
+		filePath = tempFile.Name()
+		log.Printf("Downloading profile to temporary file: %s", filePath)
+
+		// 定义清理函数，用于删除临时文件
+		cleanup = func() {
+			log.Printf("Cleaning up temporary file: %s", filePath)
+			err := os.Remove(filePath)
+			if err != nil && !os.IsNotExist(err) { // 忽略文件不存在的错误
+				log.Printf("Warning: failed to remove temporary file '%s': %v", filePath, err)
+			}
+		}
+
+		// 将下载的内容复制到临时文件
+		_, err = io.Copy(tempFile, resp.Body)
+		// 在复制后立即关闭文件句柄，以便后续可以重新打开或被其他进程使用
+		closeErr := tempFile.Close()
+
+		if err != nil {
+			cleanup() // 如果复制失败，尝试清理临时文件
+			return "", nil, fmt.Errorf("failed to write downloaded content to temporary file '%s': %w", filePath, err)
+		}
+		if closeErr != nil {
+			// 虽然复制成功，但关闭文件失败也可能是问题
+			log.Printf("Warning: failed to close temporary file handle for '%s': %v", filePath, closeErr)
+			// 不立即清理，因为文件内容可能已写入，后续步骤可能仍需使用
+		}
+
+		log.Printf("Successfully downloaded profile to %s", filePath)
+		return filePath, cleanup, nil
+
+	default:
+		return "", nil, fmt.Errorf("unsupported URI scheme '%s', only 'file://', 'http://', 'https://', or a plain local path are supported", parsedURI.Scheme)
+	}
+}
 
 // handleAnalyzePprof 处理分析 pprof 文件的请求。
 // 这是 MCP 工具 "analyze_pprof" 的处理器函数。
@@ -45,32 +141,29 @@ func handleAnalyzePprof(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 
 	log.Printf("Handling analyze_pprof: URI=%s, Type=%s, TopN=%d, Format=%s", profileURIStr, profileType, topN, outputFormat)
 
-	// --- 2. 读取并解析 profile 文件 ---
-	parsedURI, err := url.Parse(profileURIStr)
+	// --- 2. 获取 profile 文件（本地或下载）并解析 ---
+	filePath, cleanup, err := getProfileAsFile(profileURIStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid profile URI '%s': %w", profileURIStr, err)
+		return nil, fmt.Errorf("failed to get profile file: %w", err)
 	}
-	if parsedURI.Scheme != "file" {
-		return nil, fmt.Errorf("不支持的 URI scheme '%s'，目前仅支持 'file://'", parsedURI.Scheme)
-	}
-	filePath := parsedURI.Path
-	if filePath == "" {
-		return nil, fmt.Errorf("invalid file path derived from URI '%s'", profileURIStr)
-	}
+	defer cleanup() // 确保临时文件（如果创建了）被清理
 
-	log.Printf("Attempting to open profile file: %s", filePath)
+	// 打开获取到的文件（可能是本地原文件或临时文件）
 	file, err := os.Open(filePath)
 	if err != nil {
+		// 如果是临时文件打开失败，可能不需要再次 cleanup，但记录错误
+		log.Printf("Error opening profile file '%s' (might be temporary): %v", filePath, err)
 		return nil, fmt.Errorf("failed to open profile file '%s': %w", filePath, err)
 	}
-	defer file.Close() // 确保文件在函数结束时关闭
+	defer file.Close() // 确保文件句柄被关闭
 
+	// 解析 profile
 	prof, err := profile.Parse(file)
 	if err != nil {
 		log.Printf("Error parsing profile file '%s': %v", filePath, err)
-		return nil, fmt.Errorf("failed to parse profile file: %w", err)
+		return nil, fmt.Errorf("failed to parse profile file '%s': %w", filePath, err)
 	}
-	log.Printf("Successfully parsed profile file: %s", filePath)
+	log.Printf("Successfully parsed profile file from path: %s", filePath)
 
 	// --- 3. 根据 profile 类型分发到具体的分析函数 ---
 	var analysisResult string
@@ -131,18 +224,12 @@ func handleGenerateFlamegraph(ctx context.Context, request mcp.CallToolRequest) 
 
 	log.Printf("Handling generate_flamegraph: URI=%s, Type=%s, Output=%s", profileURIStr, profileType, outputSvgPath)
 
-	// --- 2. 解析输入 URI ---
-	parsedURI, err := url.Parse(profileURIStr)
+	// --- 2. 获取 profile 文件（本地或下载）---
+	inputFilePath, cleanup, err := getProfileAsFile(profileURIStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid profile URI '%s': %w", profileURIStr, err)
+		return nil, fmt.Errorf("failed to get profile file for flamegraph: %w", err)
 	}
-	if parsedURI.Scheme != "file" {
-		return nil, fmt.Errorf("不支持的 URI scheme '%s'，目前仅支持 'file://'", parsedURI.Scheme)
-	}
-	inputFilePath := parsedURI.Path
-	if inputFilePath == "" {
-		return nil, fmt.Errorf("invalid file path derived from URI '%s'", profileURIStr)
-	}
+	defer cleanup() // 确保临时文件（如果创建了）被清理
 
 	// 确保输出路径是绝对路径或相对于工作区的有效路径
 	// 如果不是绝对路径，则假定它是相对于当前工作目录的

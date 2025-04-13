@@ -9,7 +9,7 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
 ## Features
 
 *   **`analyze_pprof` Tool:**
-    *   Analyzes local pprof files (currently only supports `file://` URIs).
+    *   Analyzes pprof files from local paths (`file://`) or remote URLs (`http://`, `https://`).
     *   Supported Profile Types:
         *   `cpu`: Analyzes CPU time consumption during code execution to find hot spots.
         *   `heap`: Analyzes the current memory usage (heap allocations) to find objects and functions with high memory consumption.
@@ -185,7 +185,7 @@ After configuration, reload or restart your MCP client, and it should automatica
 
 ## Usage Examples (via MCP Client)
 
-Once the server is connected, you can call the `analyze_pprof` and `generate_flamegraph` tools.
+Once the server is connected, you can call the `analyze_pprof` and `generate_flamegraph` tools using `file://`, `http://`, or `https://` URIs for the profile file.
 
 **Example: Analyze CPU Profile (Text format, Top 5)**
 
@@ -265,10 +265,22 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
 }
 ```
 
+**Example: Analyze Remote CPU Profile (from HTTP URL)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "https://example.com/profiles/cpu.pprof",
+    "profile_type": "cpu"
+  }
+}
+```
+
 ## Future Improvements (TODO)
 
 *   Implement full analysis logic for `allocs`, `mutex`, `block` profiles.
 *   Implement `json` output format for `allocs`, `mutex`, `block` profile types.
 *   Set appropriate MIME types in MCP results based on `output_format`.
 *   Add more robust error handling and logging level control.
-*   Consider supporting remote pprof file URIs (e.g., `http://`, `https://`).
+*   ~~Consider supporting remote pprof file URIs (e.g., `http://`, `https://`).~~ (Done)

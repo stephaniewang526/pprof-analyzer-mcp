@@ -9,7 +9,7 @@
 ## 功能
 
 *   **`analyze_pprof` 工具:**
-    *   分析本地 pprof 文件 (目前仅支持 `file://` URI)。
+    *   分析来自本地路径 (`file://`) 或远程 URL (`http://`, `https://`) 的 pprof 文件。
     *   支持的 Profile 类型：
         *   `cpu`: 分析代码执行的 CPU 时间消耗，找出热点函数。
         *   `heap`: 分析程序当前的内存使用情况（堆内存分配），找出内存占用高的对象和函数。
@@ -185,7 +185,7 @@ go install .
 
 ## 使用示例 (通过 MCP 客户端)
 
-一旦服务器连接成功，你就可以调用 `analyze_pprof` 和 `generate_flamegraph` 工具了。
+一旦服务器连接成功，你就可以使用 `file://`, `http://`, 或 `https://` URI 来调用 `analyze_pprof` 和 `generate_flamegraph` 工具了。
 
 **示例：分析 CPU Profile (文本格式，Top 5)**
 
@@ -265,10 +265,22 @@ go install .
 }
 ```
 
+**示例：分析远程 CPU Profile (来自 HTTP URL)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "https://example.com/profiles/cpu.pprof",
+    "profile_type": "cpu"
+  }
+}
+```
+
 ## 未来改进 (TODO)
 
 *   实现 `allocs`, `mutex`, `block` profile 的完整分析逻辑。
 *   为 `allocs`, `mutex`, `block` profile 类型实现 `json` 输出格式。
 *   在 MCP 结果中根据 `output_format` 设置合适的 MIME 类型。
 *   增加更健壮的错误处理和日志级别控制。
-*   考虑支持远程 pprof 文件 URI (例如 `http://`, `https://`)。
+*   ~~考虑支持远程 pprof 文件 URI (例如 `http://`, `https://`)。~~ (已完成)
