@@ -1,5 +1,6 @@
 # .goreleaser.yaml
 # Visit https://goreleaser.com/customization/ for more options
+version: 2 # Specify configuration version
 
 # Project metadata
 project_name: pprof-analyzer-mcp
@@ -12,17 +13,11 @@ env:
 builds:
   - # Main build configuration for the CLI tool
     id: pprof-analyzer-mcp
-    # Path to the main package
-    main: ./main.go
+    # Let goreleaser build the package in the current directory (where main.go and handler.go reside)
+    # main: ./main.go # Removed this line
     # Binary name (defaults to project_name)
     binary: pprof-analyzer-mcp
     # Target platforms (OS and Architecture)
-    # Common examples:
-    # - linux/amd64
-    # - linux/arm64
-    # - darwin/amd64 (macOS Intel)
-    # - darwin/arm64 (macOS Apple Silicon)
-    # - windows/amd64
     goos:
       - linux
       - darwin
@@ -45,7 +40,8 @@ archives:
     # files:
     #   - LICENSE
     #   - README.md
-    # Format (zip or tar.gz)
+    #   - README_zh-CN.md # Add the Chinese README if desired
+    # Format (zip or tar.gz) - This is the correct place for format
     format: tar.gz
     # Optional: Naming template for the archive file
     # name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
@@ -56,9 +52,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 
-# Snapshot release configuration (for testing goreleaser without tagging)
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+# Snapshot block removed as it's often not needed and caused deprecation warning
 
 # Changelog generation configuration
 changelog:
