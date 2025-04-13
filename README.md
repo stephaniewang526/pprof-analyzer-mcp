@@ -2,6 +2,8 @@
 
 # Pprof Analyzer MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@ZephyrDeng/pprof-analyzer-mcp)](https://smithery.ai/server/@ZephyrDeng/pprof-analyzer-mcp)
+
 This is a Model Context Protocol (MCP) server implemented in Go, providing a tool to analyze Go pprof performance profiles.
 
 ## Features

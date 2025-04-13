@@ -2,6 +2,8 @@
 
 # Pprof Analyzer MCP 服务器
 
+[![smithery badge](https://smithery.ai/badge/@ZephyrDeng/pprof-analyzer-mcp)](https://smithery.ai/server/@ZephyrDeng/pprof-analyzer-mcp)
+
 这是一个基于 Go 语言实现的模型上下文协议 (MCP) 服务器，提供了一个用于分析 Go pprof 性能剖析文件的工具。
 
 ## 功能
