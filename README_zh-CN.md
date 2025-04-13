@@ -277,6 +277,32 @@ go install .
 }
 ```
 
+**示例：分析在线 CPU Profile (来自 GitHub Raw URL)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.cpu",
+    "profile_type": "cpu",
+    "top_n": 5
+  }
+}
+```
+
+**示例：生成在线 Heap Profile 的火焰图 (来自 GitHub Raw URL)**
+
+```json
+{
+  "tool_name": "generate_flamegraph",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.heap",
+    "profile_type": "heap",
+    "output_svg_path": "./online_heap_flamegraph.svg"
+  }
+}
+```
+
 ## 未来改进 (TODO)
 
 *   实现 `allocs`, `mutex`, `block` profile 的完整分析逻辑。

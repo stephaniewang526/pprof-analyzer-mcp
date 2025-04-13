@@ -277,6 +277,32 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
 }
 ```
 
+**Example: Analyze Online CPU Profile (from GitHub Raw URL)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.cpu",
+    "profile_type": "cpu",
+    "top_n": 5
+  }
+}
+```
+
+**Example: Generate Flame Graph for Online Heap Profile (from GitHub Raw URL)**
+
+```json
+{
+  "tool_name": "generate_flamegraph",
+  "arguments": {
+    "profile_uri": "https://raw.githubusercontent.com/google/pprof/refs/heads/main/profile/testdata/gobench.heap",
+    "profile_type": "heap",
+    "output_svg_path": "./online_heap_flamegraph.svg"
+  }
+}
+```
+
 ## Future Improvements (TODO)
 
 *   Implement full analysis logic for `allocs`, `mutex`, `block` profiles.
