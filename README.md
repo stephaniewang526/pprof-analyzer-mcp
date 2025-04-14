@@ -91,11 +91,9 @@ Using Docker is a convenient way to run the server, as it bundles the necessary 
     ```json
     {
       "mcpServers": {
-        "pprof-analyzer-docker": { // Use a distinct name for the Docker setup
-          // Use 'docker run' as the command
+        "pprof-analyzer-docker": {
           "command": "docker run -i --rm pprof-analyzer-mcp"
         }
-        // ... other server configurations
       }
     }
     ```
@@ -144,22 +142,9 @@ Typically, this involves adding the following configuration to the `.roo/mcp.jso
 ```json
 {
   "mcpServers": {
-    "pprof-analyzer": { // You can choose a name for the server
-      // Specify the command to start the server.
-      // If you used 'go build', provide the **absolute path** or **relative path** (from project root) to the compiled executable.
-      // Example: "command": "/path/to/your/pprof-analyzer-mcp/pprof-analyzer-mcp"
-      // Or: "command": "./pprof-analyzer-mcp/pprof-analyzer-mcp"
-      //
-      // If you used 'go install github.com/ZephyrDeng/pprof-analyzer-mcp@latest'
-      // and $GOPATH/bin or $HOME/go/bin is in your PATH,
-      // you can use the executable name directly:
+    "pprof-analyzer": {
       "command": "pprof-analyzer-mcp"
-      // Alternatively, if built and installed from source (go install .):
-      // "command": "pprof-analyzer-mcp" (if in PATH)
-      // Or specify the built path:
-      // "command": "./pprof-analyzer-mcp/pprof-analyzer-mcp"
     }
-    // ... other server configurations
   }
 }
 ```

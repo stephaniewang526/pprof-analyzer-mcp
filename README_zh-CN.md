@@ -91,11 +91,9 @@ go install .
     ```json
     {
       "mcpServers": {
-        "pprof-analyzer-docker": { // 为 Docker 设置使用一个不同的名称
-          // 使用 'docker run' 作为命令
+        "pprof-analyzer-docker": {
           "command": "docker run -i --rm pprof-analyzer-mcp"
         }
-        // ... 其他服务器配置
       }
     }
     ```
@@ -144,22 +142,9 @@ go install .
 ```json
 {
   "mcpServers": {
-    "pprof-analyzer": { // 你可以为服务器选择一个名称
-      // 指定启动服务器的命令。
-      // 如果你使用了 'go build'，这里需要填写编译出的可执行文件的 **绝对路径** 或 **相对路径** (相对于项目根目录)。
-      // 例如："command": "/path/to/your/pprof-analyzer-mcp/pprof-analyzer-mcp"
-      // 或者："command": "./pprof-analyzer-mcp/pprof-analyzer-mcp"
-      //
-      // 如果你使用了 'go install github.com/ZephyrDeng/pprof-analyzer-mcp@latest'
-      // 并且 $GOPATH/bin 或 $HOME/go/bin 在你的 PATH 中，
-      // 你可以直接使用可执行文件名：
+    "pprof-analyzer": {
       "command": "pprof-analyzer-mcp"
-      // 或者，如果从源码构建并安装 (go install .):
-      // "command": "pprof-analyzer-mcp" (if in PATH)
-      // 或者指定构建后的路径：
-      // "command": "./pprof-analyzer-mcp/pprof-analyzer-mcp"
     }
-    // ... 其他服务器配置
   }
 }
 ```
