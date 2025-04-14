@@ -9,7 +9,7 @@
 ## 功能
 
 *   **`analyze_pprof` 工具:**
-    *   分析来自本地路径 (`file://`) 或远程 URL (`http://`, `https://`) 的 pprof 文件。
+    *   分析指定的 Go pprof 文件，并返回序列化的分析结果 (例如 Top N 列表或火焰图 JSON)。
     *   支持的 Profile 类型：
         *   `cpu`: 分析代码执行的 CPU 时间消耗，找出热点函数。
         *   `heap`: 分析程序当前的内存使用情况（堆内存分配），找出内存占用高的对象和函数。
@@ -17,12 +17,13 @@
         *   `allocs`: 分析程序运行期间的内存分配情况（包括已释放的），用于定位频繁分配内存的代码。(*暂未实现*)
         *   `mutex`: 分析互斥锁的竞争情况，找出导致阻塞的锁。(*暂未实现*)
         *   `block`: 分析导致 Goroutine 阻塞的操作（如 channel 等待、系统调用等）。(*暂未实现*)
-    *   支持的输出格式：`text`, `markdown`, `json`。
-        *   `text` 和 `markdown` 已实现。
+    *   支持的输出格式：`text`, `markdown`, `json` (Top N 列表), `flamegraph-json` (火焰图层级数据，默认)。
+        *   `text`, `markdown`: 人类可读的文本或 Markdown 格式。
         *   `json`: 以结构化 JSON 格式输出 Top N 结果 (已为 `cpu`, `heap`, `goroutine` 实现)。
-    *   可配置返回结果数量 (`top_n`, 默认为 5)。
+        *   `flamegraph-json`: 以层级化 JSON 格式输出火焰图数据，兼容 d3-flame-graph (已为 `cpu`, `heap` 实现，默认格式)。输出为紧凑格式。
+    *   可配置 Top N 结果数量 (`top_n`, 默认为 5，对 `text`, `markdown`, `json` 格式有效)。
 *   **`generate_flamegraph` 工具:**
-    *   使用 `go tool pprof` 命令为指定的 pprof 文件生成 SVG 格式的火焰图。
+    *   使用 `go tool pprof` 为指定的 pprof 文件生成火焰图 (SVG 格式)，将其保存到指定路径，并返回路径和 SVG 内容。
     *   支持的 Profile 类型：`cpu`, `heap`, `allocs`, `goroutine`, `mutex`, `block`。
     *   需要用户指定输出 SVG 文件的路径。
     *   **重要：** 此功能依赖于 [Graphviz](#依赖项) 的安装。
@@ -272,6 +273,31 @@ go install .
     "output_format": "json"
   }
 }
+```
+
+**示例：分析 CPU Profile (默认火焰图 JSON 格式)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "file:///path/to/your/cpu.pprof",
+    "profile_type": "cpu"
+    // output_format 默认为 "flamegraph-json"
+  }
+}
+```
+
+**示例：分析 Heap Profile (显式指定火焰图 JSON 格式)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "file:///path/to/your/heap.pprof",
+    "profile_type": "heap",
+    "output_format": "flamegraph-json"
+  }
 ```
 
 **示例：分析远程 CPU Profile (来自 HTTP URL)**

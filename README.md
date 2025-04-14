@@ -9,7 +9,7 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
 ## Features
 
 *   **`analyze_pprof` Tool:**
-    *   Analyzes pprof files from local paths (`file://`) or remote URLs (`http://`, `https://`).
+    *   Analyzes the specified Go pprof file and returns serialized analysis results (e.g., Top N list or flame graph JSON).
     *   Supported Profile Types:
         *   `cpu`: Analyzes CPU time consumption during code execution to find hot spots.
         *   `heap`: Analyzes the current memory usage (heap allocations) to find objects and functions with high memory consumption.
@@ -17,12 +17,13 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
         *   `allocs`: Analyzes memory allocations (including freed ones) during program execution to locate code with frequent allocations. (*Not yet implemented*)
         *   `mutex`: Analyzes contention on mutexes to find locks causing blocking. (*Not yet implemented*)
         *   `block`: Analyzes operations causing goroutine blocking (e.g., channel waits, system calls). (*Not yet implemented*)
-    *   Supported Output Formats: `text`, `markdown`, `json`.
-        *   `text` and `markdown` are implemented.
+    *   Supported Output Formats: `text`, `markdown`, `json` (Top N list), `flamegraph-json` (hierarchical flame graph data, default).
+        *   `text`, `markdown`: Human-readable text or Markdown format.
         *   `json`: Outputs Top N results in structured JSON format (implemented for `cpu`, `heap`, `goroutine`).
-    *   Configurable number of results to return (`top_n`, defaults to 5).
+        *   `flamegraph-json`: Outputs hierarchical flame graph data in JSON format, compatible with d3-flame-graph (implemented for `cpu`, `heap`, default format). Output is compact.
+    *   Configurable number of Top N results (`top_n`, defaults to 5, effective for `text`, `markdown`, `json` formats).
 *   **`generate_flamegraph` Tool:**
-    *   Uses the `go tool pprof` command to generate an SVG flame graph for the specified pprof file.
+    *   Uses `go tool pprof` to generate a flame graph (SVG format) for the specified pprof file, saves it to the specified path, and returns the path and SVG content.
     *   Supported Profile Types: `cpu`, `heap`, `allocs`, `goroutine`, `mutex`, `block`.
     *   Requires the user to specify the output SVG file path.
     *   **Important:** This feature depends on [Graphviz](#dependencies) being installed.
@@ -272,6 +273,31 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
     "output_format": "json"
   }
 }
+```
+
+**Example: Analyze CPU Profile (Default Flame Graph JSON format)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "file:///path/to/your/cpu.pprof",
+    "profile_type": "cpu"
+    // output_format defaults to "flamegraph-json"
+  }
+}
+```
+
+**Example: Analyze Heap Profile (Explicitly Flame Graph JSON format)**
+
+```json
+{
+  "tool_name": "analyze_pprof",
+  "arguments": {
+    "profile_uri": "file:///path/to/your/heap.pprof",
+    "profile_type": "heap",
+    "output_format": "flamegraph-json"
+  }
 ```
 
 **Example: Analyze Remote CPU Profile (from HTTP URL)**

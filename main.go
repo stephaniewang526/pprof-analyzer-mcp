@@ -20,7 +20,7 @@ func main() {
 
 	// 2. 定义 analyze_pprof 工具及其参数
 	analyzeTool := mcp.NewTool("analyze_pprof",
-		mcp.WithDescription("分析指定的 Go pprof 文件 (支持 cpu, heap, goroutine, allocs, mutex, block 类型)。"),
+		mcp.WithDescription("分析指定的 Go pprof 文件，并返回序列化的分析结果 (例如 Top N 列表或火焰图 JSON)。"), // 更新描述
 		// mcp.WithAnnotation("title", "Analyze Go pprof Profile"), // TODO: 检查如何在 mcp-go 中设置注解
 		// mcp.WithAnnotation("readOnlyHint", true),             // TODO: 检查如何在 mcp-go 中设置注解
 
@@ -46,7 +46,7 @@ func main() {
 
 	// 3. 定义 generate_flamegraph 工具
 	flamegraphTool := mcp.NewTool("generate_flamegraph",
-		mcp.WithDescription("使用 'go tool pprof' 生成指定 pprof 文件的火焰图 (SVG 格式)。"),
+		mcp.WithDescription("使用 'go tool pprof' 为指定的 pprof 文件生成火焰图 (SVG 格式)，将其保存到指定路径，并返回路径和 SVG 内容。"), // 更新描述
 		mcp.WithString("profile_uri",
 			mcp.Description("要生成火焰图的 pprof 文件的 URI (支持 'file://', 'http://', 'https://' 协议)。"),
 			mcp.Required(),
