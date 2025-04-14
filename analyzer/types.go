@@ -61,6 +61,18 @@ type GoroutineAnalysisResult struct {
 	Stacks          []GoroutineStackInfo `json:"stacks"` // Top N 堆栈列表
 }
 
+// FlameGraphNode 代表火焰图中的一个节点 (JSON)
+// 用于生成层级化的 JSON 数据，适合 d3-flame-graph 等库使用
+type FlameGraphNode struct {
+	Name     string            `json:"name"`               // 函数名或其他标识符
+	Value    int64             `json:"value"`              // 该节点及其子节点的总值
+	Children []*FlameGraphNode `json:"children,omitempty"` // 子节点列表
+	// 可以添加其他元数据字段，例如：
+	// FlatValue int64 `json:"flatValue,omitempty"` // 仅该节点自身的值
+	// FilePath string `json:"filePath,omitempty"` // 源码文件路径
+	// LineNum int `json:"lineNum,omitempty"` // 源码行号
+}
+
 // --- 内部辅助结构体 ---
 
 // functionStat 保存函数的聚合统计信息。

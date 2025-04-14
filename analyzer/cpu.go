@@ -152,6 +152,24 @@ func AnalyzeCPUProfile(p *profile.Profile, topN int, format string) (string, err
 		}
 		return string(jsonBytes), nil
 
+	case "flamegraph-json":
+		log.Printf("Generating flame graph JSON for CPU profile using value index %d", valueIndex)
+		flameGraphRoot, err := BuildFlameGraphTree(p, valueIndex) // 调用新函数
+		if err != nil {
+			log.Printf("Error building flame graph tree: %v", err)
+			errorResult := ErrorResult{Error: fmt.Sprintf("Failed to build flame graph tree: %v", err)}
+			errJsonBytes, _ := json.Marshal(errorResult)
+			return string(errJsonBytes), nil // 返回错误信息，但不标记为分析错误
+		}
+		jsonBytes, err := json.Marshal(flameGraphRoot) // 使用 Marshal 生成紧凑 JSON
+		if err != nil {
+			log.Printf("Error marshaling flame graph tree to JSON: %v", err)
+			errorResult := ErrorResult{Error: fmt.Sprintf("Failed to marshal flame graph tree to JSON: %v", err)}
+			errJsonBytes, _ := json.Marshal(errorResult)
+			return string(errJsonBytes), nil // 返回错误信息，但不标记为分析错误
+		}
+		return string(jsonBytes), nil
+
 	default:
 		return "", fmt.Errorf("unsupported output format: %s", format)
 	}

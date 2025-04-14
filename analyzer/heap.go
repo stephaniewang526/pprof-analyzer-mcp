@@ -145,6 +145,24 @@ func AnalyzeHeapProfile(p *profile.Profile, topN int, format string) (string, er
 			return string(errJsonBytes), nil
 		}
 		return string(jsonBytes), nil
+
+	case "flamegraph-json":
+		log.Printf("Generating flame graph JSON for Heap profile (%s) using value index %d", valueType, valueIndex)
+		flameGraphRoot, err := BuildFlameGraphTree(p, valueIndex) // 调用通用函数
+		if err != nil {
+			log.Printf("Error building flame graph tree for heap: %v", err)
+			errorResult := ErrorResult{Error: fmt.Sprintf("Failed to build flame graph tree for heap: %v", err)}
+			errJsonBytes, _ := json.Marshal(errorResult)
+			return string(errJsonBytes), nil
+		}
+		jsonBytes, err := json.Marshal(flameGraphRoot) // 使用 Marshal 生成紧凑 JSON
+		if err != nil {
+			log.Printf("Error marshaling heap flame graph tree to JSON: %v", err)
+			errorResult := ErrorResult{Error: fmt.Sprintf("Failed to marshal heap flame graph tree to JSON: %v", err)}
+			errJsonBytes, _ := json.Marshal(errorResult)
+			return string(errJsonBytes), nil
+		}
+		return string(jsonBytes), nil
 	default:
 		return "", fmt.Errorf("unsupported output format: %s", format)
 	}

@@ -38,9 +38,9 @@ func main() {
 			mcp.DefaultNumber(5.0), // MCP Go SDK 使用 float64 表示数字，默认为 5
 		),
 		mcp.WithString("output_format", // 参数名称
-			mcp.Description("分析结果的输出格式。"),
-			mcp.DefaultString("text"),
-			mcp.Enum("text", "markdown", "json"),
+			mcp.Description("分析结果的输出格式。'flamegraph-json' 仅适用于 'cpu' 和 'heap' 类型，用于生成层级化的 JSON 数据。"),
+			mcp.DefaultString("flamegraph-json"),                    // 将默认值改为 flamegraph-json
+			mcp.Enum("text", "markdown", "json", "flamegraph-json"), // 添加新格式
 		),
 	)
 
