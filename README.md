@@ -3,6 +3,11 @@
 # Pprof Analyzer MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@ZephyrDeng/pprof-analyzer-mcp)](https://smithery.ai/server/@ZephyrDeng/pprof-analyzer-mcp)
+![](https://badge.mcpx.dev?type=server&features=tools 'MCP server with tools')
+[![Build Status](https://github.com/ZephyrDeng/pprof-analyzer-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/ZephyrDeng/pprof-analyzer-mcp/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ZephyrDeng/pprof-analyzer-mcp)](https://golang.org)
+[![GoDoc](https://pkg.go.dev/badge/github.com/ZephyrDeng/pprof-analyzer-mcp)](https://pkg.go.dev/github.com/ZephyrDeng/pprof-analyzer-mcp)
 
 This is a Model Context Protocol (MCP) server implemented in Go, providing a tool to analyze Go pprof performance profiles.
 
@@ -283,6 +288,7 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
     "profile_type": "heap",
     "output_format": "flamegraph-json"
   }
+}
 ```
 
 **Example: Analyze Remote CPU Profile (from HTTP URL)**

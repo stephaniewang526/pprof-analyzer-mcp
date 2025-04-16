@@ -3,6 +3,11 @@
 # Pprof Analyzer MCP 服务器
 
 [![smithery badge](https://smithery.ai/badge/@ZephyrDeng/pprof-analyzer-mcp)](https://smithery.ai/server/@ZephyrDeng/pprof-analyzer-mcp)
+![](https://badge.mcpx.dev?type=server&features=tools 'MCP server with tools')
+[![Build Status](https://github.com/ZephyrDeng/pprof-analyzer-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/ZephyrDeng/pprof-analyzer-mcp/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ZephyrDeng/pprof-analyzer-mcp)](https://golang.org)
+[![GoDoc](https://pkg.go.dev/badge/github.com/ZephyrDeng/pprof-analyzer-mcp)](https://pkg.go.dev/github.com/ZephyrDeng/pprof-analyzer-mcp)
 
 这是一个基于 Go 语言实现的模型上下文协议 (MCP) 服务器，提供了一个用于分析 Go pprof 性能剖析文件的工具。
 
@@ -283,6 +288,7 @@ go install .
     "profile_type": "heap",
     "output_format": "flamegraph-json"
   }
+}
 ```
 
 **示例：分析远程 CPU Profile (来自 HTTP URL)**
