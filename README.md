@@ -17,15 +17,15 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
     *   Analyzes the specified Go pprof file and returns serialized analysis results (e.g., Top N list or flame graph JSON).
     *   Supported Profile Types:
         *   `cpu`: Analyzes CPU time consumption during code execution to find hot spots.
-        *   `heap`: Analyzes the current memory usage (heap allocations) to find objects and functions with high memory consumption.
+        *   `heap`: Analyzes the current memory usage (heap allocations) to find objects and functions with high memory consumption. Enhanced with object count, allocation site, and type information.
         *   `goroutine`: Displays stack traces of all current goroutines, used for diagnosing deadlocks, leaks, or excessive goroutine usage.
-        *   `allocs`: Analyzes memory allocations (including freed ones) during program execution to locate code with frequent allocations. (*Not yet implemented*)
+        *   `allocs`: Analyzes memory allocations (including freed ones) during program execution to locate code with frequent allocations. Provides detailed allocation site and object count information.
         *   `mutex`: Analyzes contention on mutexes to find locks causing blocking. (*Not yet implemented*)
         *   `block`: Analyzes operations causing goroutine blocking (e.g., channel waits, system calls). (*Not yet implemented*)
     *   Supported Output Formats: `text`, `markdown`, `json` (Top N list), `flamegraph-json` (hierarchical flame graph data, default).
         *   `text`, `markdown`: Human-readable text or Markdown format.
-        *   `json`: Outputs Top N results in structured JSON format (implemented for `cpu`, `heap`, `goroutine`).
-        *   `flamegraph-json`: Outputs hierarchical flame graph data in JSON format, compatible with d3-flame-graph (implemented for `cpu`, `heap`, default format). Output is compact.
+        *   `json`: Outputs Top N results in structured JSON format (implemented for `cpu`, `heap`, `goroutine`, `allocs`).
+        *   `flamegraph-json`: Outputs hierarchical flame graph data in JSON format, compatible with d3-flame-graph (implemented for `cpu`, `heap`, `allocs`, default format). Output is compact.
     *   Configurable number of Top N results (`top_n`, defaults to 5, effective for `text`, `markdown`, `json` formats).
 *   **`generate_flamegraph` Tool:**
     *   Uses `go tool pprof` to generate a flame graph (SVG format) for the specified pprof file, saves it to the specified path, and returns the path and SVG content.
@@ -38,6 +38,12 @@ This is a Model Context Protocol (MCP) server implemented in Go, providing a too
     *   **macOS Only:** This tool will only work on macOS.
     *   **Dependencies:** Requires the `go` command to be available in the system's PATH.
     *   **Limitations:** Errors from the background `pprof` process are not captured by the server. Temporary files downloaded from remote URLs are not automatically cleaned up until the process is terminated (either manually via `disconnect_pprof_session` or when the MCP server exits).
+*   **`detect_memory_leaks` Tool:**
+    *   Compares two heap profile snapshots to identify potential memory leaks.
+    *   Analyzes memory growth by object type and allocation site.
+    *   Provides detailed statistics on memory growth, including absolute and percentage changes.
+    *   Configurable growth threshold and result limit.
+    *   Helps identify memory leaks by comparing profiles taken at different points in time.
 *   **`disconnect_pprof_session` Tool:**
     *   Attempts to terminate a background `pprof` process previously started by `open_interactive_pprof`, using its PID.
     *   Sends an Interrupt signal first, then a Kill signal if Interrupt fails.
@@ -341,6 +347,20 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
 }
 ```
 
+**Example: Detect Memory Leaks Between Two Heap Profiles**
+
+```json
+{
+  "tool_name": "detect_memory_leaks",
+  "arguments": {
+    "old_profile_uri": "file:///path/to/your/heap_before.pprof",
+    "new_profile_uri": "file:///path/to/your/heap_after.pprof",
+    "threshold": 0.05,  // 5% growth threshold
+    "limit": 15         // Show top 15 potential leaks
+  }
+}
+```
+
 **Example: Disconnect a Pprof Session**
 
 ```json
@@ -354,8 +374,13 @@ Once the server is connected, you can call the `analyze_pprof` and `generate_fla
 
 ## Future Improvements (TODO)
 
-*   Implement full analysis logic for `allocs`, `mutex`, `block` profiles.
-*   Implement `json` output format for `allocs`, `mutex`, `block` profile types.
+*   Implement full analysis logic for `mutex`, `block` profiles.
+*   Implement `json` output format for `mutex`, `block` profile types.
 *   Set appropriate MIME types in MCP results based on `output_format`.
 *   Add more robust error handling and logging level control.
 *   ~~Consider supporting remote pprof file URIs (e.g., `http://`, `https://`).~~ (Done)
+*   ~~Implement full analysis logic for `allocs` profiles.~~ (Done)
+*   ~~Implement `json` output format for `allocs` profile type.~~ (Done)
+*   ~~Add memory leak detection capabilities.~~ (Done)
+*   Add time-series analysis for memory profiles to track growth over multiple snapshots.
+*   Implement differential flame graphs to visualize changes between profiles.
