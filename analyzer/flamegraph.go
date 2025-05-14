@@ -37,8 +37,12 @@ func BuildFlameGraphTree(p *profile.Profile, valueIndex int) (*FlameGraphNode, e
 	valueUnit := p.SampleType[valueIndex].Unit
 	valueType := p.SampleType[valueIndex].Type
 
-	if valueUnit == "bytes" && (valueType == "inuse_space" || valueType == "alloc_space") {
+	// Check if this is a memory profile (heap or allocs)
+	// Memory profiles have bytes as the unit and specific value types
+	if valueUnit == "bytes" && (valueType == "inuse_space" || valueType == "alloc_space" ||
+		valueType == "alloc" || valueType == "allocation") {
 		isMemoryProfile = true
+		// Find the corresponding objects index
 		for i, st := range p.SampleType {
 			if (st.Type == "inuse_objects" || st.Type == "alloc_objects") && st.Unit == "count" {
 				objectsIndex = i

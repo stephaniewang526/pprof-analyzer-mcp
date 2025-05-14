@@ -279,6 +279,8 @@ func AnalyzeAllocsProfile(p *profile.Profile, topN int, format string) (string, 
 
 	case "flamegraph-json":
 		log.Printf("Generating flame graph JSON for Allocs profile (%s) using value index %d", valueType, valueIndex)
+		// BuildFlameGraphTree will automatically detect this is a memory profile and find the objectsIndex
+		// based on the valueType and valueUnit
 		flameGraphRoot, err := BuildFlameGraphTree(p, valueIndex)
 		if err != nil {
 			log.Printf("Error building flame graph tree for allocs: %v", err)

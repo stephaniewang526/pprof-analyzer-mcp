@@ -120,7 +120,7 @@ func main() {
 	setupSignalHandler() // 在服务器启动前设置
 
 	// 9. Start the server using stdio transport
-	log.Println("Starting Steph's PprofAnalyzer MCP server via stdio...")
+	log.Println("Starting PprofAnalyzer MCP server via stdio...")
 	if err := server.ServeStdio(mcpServer); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}

@@ -379,7 +379,9 @@ func AnalyzeHeapProfile(p *profile.Profile, topN int, format string) (string, er
 
 	case "flamegraph-json":
 		log.Printf("Generating flame graph JSON for Heap profile (%s) using value index %d", valueType, valueIndex)
-		flameGraphRoot, err := BuildFlameGraphTree(p, valueIndex) // 调用通用函数
+		// BuildFlameGraphTree will automatically detect this is a memory profile and find the objectsIndex
+		// based on the valueType and valueUnit
+		flameGraphRoot, err := BuildFlameGraphTree(p, valueIndex)
 		if err != nil {
 			log.Printf("Error building flame graph tree for heap: %v", err)
 			errorResult := ErrorResult{Error: fmt.Sprintf("Failed to build flame graph tree for heap: %v", err)}
