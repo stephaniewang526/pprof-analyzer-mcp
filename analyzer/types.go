@@ -68,9 +68,14 @@ type FlameGraphNode struct {
 	Value    int64             `json:"value"`              // 该节点及其子节点的总值
 	Children []*FlameGraphNode `json:"children,omitempty"` // 子节点列表
 	// 可以添加其他元数据字段，例如：
-	// FlatValue int64 `json:"flatValue,omitempty"` // 仅该节点自身的值
-	// FilePath string `json:"filePath,omitempty"` // 源码文件路径
-	// LineNum int `json:"lineNum,omitempty"` // 源码行号
+	SelfValue        int64  `json:"selfValue,omitempty"`
+	ValueFormatted   string `json:"valueFormatted,omitempty"`
+	FilePath         string `json:"filePath,omitempty"`
+	LineNum          int    `json:"lineNum,omitempty"`
+	ObjectCount      int64  `json:"objectCount,omitempty"`
+	AvgSize          int64  `json:"avgSize,omitempty"`
+	AvgSizeFormatted string `json:"avgSizeFormatted,omitempty"`
+	Type             string `json:"type,omitempty"`
 }
 
 // --- 内部辅助结构体 ---
@@ -84,3 +89,25 @@ type functionStat struct {
 }
 
 // stackInfo 结构体已移至 goroutine.go
+
+// AllocSiteStat represents statistics for a single allocation site
+type AllocSiteStat struct {
+	Site             string  `json:"site"`
+	Value            int64   `json:"value"`
+	ValueFormatted   string  `json:"valueFormatted"`
+	ObjectCount      int64   `json:"objectCount,omitempty"`
+	Percentage       float64 `json:"percentage"`
+	AvgSize          int64   `json:"avgSize,omitempty"`
+	AvgSizeFormatted string  `json:"avgSizeFormatted,omitempty"`
+}
+
+// TypeStat represents statistics for a single object type
+type TypeStat struct {
+	Type             string  `json:"type"`
+	Value            int64   `json:"value"`
+	ValueFormatted   string  `json:"valueFormatted"`
+	ObjectCount      int64   `json:"objectCount,omitempty"`
+	Percentage       float64 `json:"percentage"`
+	AvgSize          int64   `json:"avgSize,omitempty"`
+	AvgSizeFormatted string  `json:"avgSizeFormatted,omitempty"`
+}

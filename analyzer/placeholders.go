@@ -8,18 +8,6 @@ import (
 	"github.com/google/pprof/profile"
 )
 
-// AnalyzeAllocsProfile 分析 Allocs profile (分配情况)。
-func AnalyzeAllocsProfile(p *profile.Profile, topN int, format string) (string, error) {
-	log.Printf("analyzeAllocsProfile called (Top %d, Format: %s) - Implementation Pending", topN, format)
-	if format == "json" {
-		errorResult := ErrorResult{Error: "JSON output not yet implemented for allocs profile", TopN: topN} // 使用 types.go 中的结构体
-		jsonBytes, _ := json.MarshalIndent(errorResult, "", "  ")
-		return string(jsonBytes), nil
-	}
-	// TODO: 实现实际的 Allocs profile 分析 (类似于 Heap，但使用 alloc_space/alloc_objects)
-	return fmt.Sprintf("Allocs Analysis Result (Top %d, Format: %s)\n[Implementation Pending]", topN, format), nil
-}
-
 // AnalyzeMutexProfile 分析 Mutex profile (锁竞争情况)。
 func AnalyzeMutexProfile(p *profile.Profile, topN int, format string) (string, error) {
 	log.Printf("analyzeMutexProfile called (Top %d, Format: %s) - Implementation Pending", topN, format)

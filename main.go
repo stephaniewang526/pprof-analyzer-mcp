@@ -62,7 +62,28 @@ func main() {
 		),
 	)
 
-	// 4. 定义 open_interactive_pprof 工具 (仅限 macOS)
+	// 4. detect_memory_leaks
+	memoryLeakTool := mcp.NewTool("detect_memory_leaks",
+		mcp.WithDescription("Compare two heap profile files to identify potential memory leaks."),
+		mcp.WithString("old_profile_uri",
+			mcp.Description("The URI of the older heap profile, supporting 'file://', 'http://', 'https://' protocols."),
+			mcp.Required(),
+		),
+		mcp.WithString("new_profile_uri",
+			mcp.Description("The URI of the newer heap profile, supporting 'file://', 'http://', 'https://' protocols."),
+			mcp.Required(),
+		),
+		mcp.WithNumber("threshold",
+			mcp.Description("The growth threshold for detecting memory leaks (0.1 represents a 10% increase)."),
+			mcp.DefaultNumber(0.1),
+		),
+		mcp.WithNumber("limit",
+			mcp.Description("The maximum number of potential memory leak types to return."),
+			mcp.DefaultNumber(10.0),
+		),
+	)
+
+	// 5. 定义 open_interactive_pprof 工具 (仅限 macOS)
 	openInteractiveTool := mcp.NewTool("open_interactive_pprof",
 		mcp.WithDescription("【仅限 macOS】尝试在后台启动 'go tool pprof' 交互式 Web UI。成功启动后会返回进程 PID，用于后续手动断开连接。"),
 		mcp.WithString("profile_uri",
@@ -75,7 +96,7 @@ func main() {
 		),
 	)
 
-	// 5. 定义 disconnect_pprof_session 工具
+	// 6. 定义 disconnect_pprof_session 工具
 	disconnectTool := mcp.NewTool("disconnect_pprof_session",
 		mcp.WithDescription("尝试终止由 'open_interactive_pprof' 启动的指定后台 pprof 进程。"),
 		mcp.WithNumber("pid", // 使用 Number 类型，因为 JSON 通常将数字表示为 float64
@@ -88,16 +109,17 @@ func main() {
 		),
 	)
 
-	// 6. 将所有工具及其处理器函数添加到服务器
+	// 7. 将所有工具及其处理器函数添加到服务器
 	mcpServer.AddTool(analyzeTool, handleAnalyzePprof)
 	mcpServer.AddTool(flamegraphTool, handleGenerateFlamegraph)
+	mcpServer.AddTool(memoryLeakTool, handleDetectMemoryLeaks)
 	mcpServer.AddTool(openInteractiveTool, handleOpenInteractivePprof)
 	mcpServer.AddTool(disconnectTool, handleDisconnectPprofSession) // 注册断开连接工具
 
-	// 7. 设置信号处理程序以进行清理
+	// 8. 设置信号处理程序以进行清理
 	setupSignalHandler() // 在服务器启动前设置
 
-	// 8. Start the server using stdio transport
+	// 9. Start the server using stdio transport
 	log.Println("Starting PprofAnalyzer MCP server via stdio...")
 	if err := server.ServeStdio(mcpServer); err != nil {
 		log.Fatalf("Server error: %v", err)

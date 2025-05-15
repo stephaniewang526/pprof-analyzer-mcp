@@ -98,7 +98,98 @@ func handleAnalyzePprof(ctx context.Context, request mcp.CallToolRequest) (*mcp.
 	}, nil
 }
 
-// handleGenerateFlamegraph 处理生成火焰图的请求。
+// handleDetectMemoryLeaks handles requests for memory leak detection.
+func handleDetectMemoryLeaks(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := request.Params.Arguments
+
+	oldProfileURIStr, ok := args["old_profile_uri"].(string)
+	if !ok || oldProfileURIStr == "" {
+		return nil, fmt.Errorf("missing or invalid required argument: old_profile_uri (string)")
+	}
+
+	newProfileURIStr, ok := args["new_profile_uri"].(string)
+	if !ok || newProfileURIStr == "" {
+		return nil, fmt.Errorf("missing or invalid required argument: new_profile_uri (string)")
+	}
+
+	thresholdFloat, ok := args["threshold"].(float64)
+	if !ok {
+		thresholdFloat = 0.1 // Default 10% growth
+	}
+
+	limitFloat, ok := args["limit"].(float64)
+	if !ok {
+		limitFloat = 10.0
+	}
+	limit := int(limitFloat)
+	if limit <= 0 {
+		limit = 10
+	}
+
+	log.Printf("Handling detect_memory_leaks: OldURI=%s, NewURI=%s, Threshold=%.2f, Limit=%d",
+		oldProfileURIStr, newProfileURIStr, thresholdFloat, limit)
+
+	// Get the old profile file
+	oldFilePath, oldCleanup, err := getProfileAsFile(oldProfileURIStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get old profile file: %w", err)
+	}
+	defer oldCleanup()
+
+	oldFile, err := os.Open(oldFilePath)
+	if err != nil {
+		log.Printf("Error opening old profile file '%s': %v", oldFilePath, err)
+		return nil, fmt.Errorf("failed to open old profile file '%s': %w", oldFilePath, err)
+	}
+	defer oldFile.Close()
+
+	oldProf, err := profile.Parse(oldFile)
+	if err != nil {
+		log.Printf("Error parsing old profile file '%s': %v", oldFilePath, err)
+		return nil, fmt.Errorf("failed to parse old profile file '%s': %w", oldFilePath, err)
+	}
+	log.Printf("Successfully parsed old profile file from path: %s", oldFilePath)
+
+	// Get the new profile file
+	newFilePath, newCleanup, err := getProfileAsFile(newProfileURIStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get new profile file: %w", err)
+	}
+	defer newCleanup()
+
+	newFile, err := os.Open(newFilePath)
+	if err != nil {
+		log.Printf("Error opening new profile file '%s': %v", newFilePath, err)
+		return nil, fmt.Errorf("failed to open new profile file '%s': %w", newFilePath, err)
+	}
+	defer newFile.Close()
+
+	newProf, err := profile.Parse(newFile)
+	if err != nil {
+		log.Printf("Error parsing new profile file '%s': %v", newFilePath, err)
+		return nil, fmt.Errorf("failed to parse new profile file '%s': %w", newFilePath, err)
+	}
+	log.Printf("Successfully parsed new profile file from path: %s", newFilePath)
+
+	// Detect memory leaks
+	result, err := analyzer.DetectPotentialMemoryLeaks(oldProf, newProf, thresholdFloat, limit)
+	if err != nil {
+		log.Printf("Error detecting memory leaks: %v", err)
+		return nil, fmt.Errorf("failed to detect memory leaks: %w", err)
+	}
+
+	log.Printf("Memory leak detection completed successfully. Result length: %d", len(result))
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.TextContent{
+				Type: "text",
+				Text: result,
+			},
+		},
+	}, nil
+}
+
+// handleGenerateFlamegraph handles requests to generate flame graphs.
 func handleGenerateFlamegraph(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := request.Params.Arguments
 
